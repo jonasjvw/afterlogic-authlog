@@ -1,0 +1,38 @@
+--- Actions.php.original	2015-05-16 22:42:23.000000000 +0200
++++ Actions.php	2015-05-16 22:42:32.000000000 +0200
+@@ -2638,10 +2638,13 @@
+ 			$iErrorCode = \ProjectSeven\Notifications::UnknownError;
+ 			if ($oException instanceof \CApiManagerException)
+ 			{
++
++				$wrong_login = false;
+ 				switch ($oException->getCode())
+ 				{
+ 					case \Errs::WebMailManager_AccountDisabled:
+ 					case \Errs::WebMailManager_AccountWebmailDisabled:
++						$wrong_login = true;
+ 						$iErrorCode = \ProjectSeven\Notifications::AuthError;
+ 						break;
+ 					case \Errs::UserManager_AccountAuthenticationFailed:
+@@ -2650,6 +2653,7 @@
+ 					case \Errs::WebMailManager_AccountCreateOnLogin:
+ 					case \Errs::Mail_AccountAuthentication:
+ 					case \Errs::Mail_AccountLoginFailed:
++						$wrong_login = true;
+ 						$iErrorCode = \ProjectSeven\Notifications::AuthError;
+ 						break;
+ 					case \Errs::UserManager_AccountConnectToMailServerFailed:
+@@ -2667,6 +2671,13 @@
+ 						$iErrorCode = \ProjectSeven\Notifications::DataBaseError;
+ 						break;
+ 				}
++
++				// if login is wrong, log it
++				if ($wrong_login) {
++					include_once PSEVEN_APP_ROOT_PATH.'libraries/log/log.php';
++					\Afterlogic\Log::WrongLogin($sEmail, $_SERVER['REMOTE_ADDR']);
++				}
++
+ 			}
+ 
+ 			\CApi::LogEvent(\EEvents::LoginFailed, $sEmail);
